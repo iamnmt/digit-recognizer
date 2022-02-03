@@ -1,0 +1,17 @@
+model:
+    name: LeNet5
+    args:
+metric:
+    - name: Accuracy
+      args:
+dataset:
+    test_path: data/test.csv
+    name: MNISTDataset
+    args:
+        csv_path: data/train.csv
+        is_rgb: False
+    loader:
+        name: DataLoader
+        args:
+            batch_size: 64
+            pin_memory: True

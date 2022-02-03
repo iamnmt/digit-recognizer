@@ -1,0 +1,47 @@
+id: LeNet5
+pretrained: null
+seed: 403030
+model:
+    name: LeNet5
+    args:
+optimizer:
+    name: Adam
+    args:
+        lr: 0.0001
+loss:
+    name: CrossEntropyLoss
+    args:
+metric:
+    - name: Accuracy
+      args:
+scheduler:
+    name: StepLR
+    args:
+        step_size: 3
+        gamma: 0.2
+        last_epoch: -1
+dataset:
+    trainval:
+        ratio: .8
+        name: MNISTDataset
+        args:
+            csv_path: data/train.csv
+            is_rgb: False
+        loader:
+            train:
+                name: DataLoader
+                args:
+                    batch_size: 16
+                    shuffle: True
+                    pin_memory: True
+            val:
+                name: DataLoader
+                args:
+                    batch_size: 16
+                    shuffle: True
+                    pin_memory: True
+trainer:
+    nepochs: 10
+    val_step: 1
+    log_step: 1
+    log_dir: runs

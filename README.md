@@ -1,2 +1,3 @@
-# pytorch-template
-General template for my PyTorch projects.
+# Kaggle Digit Recognizer
+## Models Implemented
+- [x] LeNet5

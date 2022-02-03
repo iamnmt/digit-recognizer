@@ -1,28 +1,29 @@
+import yaml
 import torch
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-import torchvision.transforms as tvtf
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
-from datasets.image_folder import ImageFolderDataset
-from utils.getter import get_instance
-from utils.device import move_to
+from src.utils.getter import get_instance, get_single_data
+from src.utils.device import move_to, detach
 
 import argparse
 import csv
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', type=str,
-                    help='path to the folder of query images')
-parser.add_argument('-w', type=str,
+parser.add_argument('-c','--config', type=str,
+                    help='config path')
+parser.add_argument('-w', '--weight', type=str,
                     help='path to weight files')
-parser.add_argument('-g', type=int, default=None,
+parser.add_argument('-g', '--gpus', type=int, default=None,
                     help='(single) GPU to use (default: None)')
-parser.add_argument('-b', type=int, default=64,
-                    help='batch size (default: 64)')
-parser.add_argument('-o', type=str, default='test.csv',
-                    help='output file (default: test.csv)')
+parser.add_argument('-o', '--save_path', type=str, default='submission.csv',
+                    help='output file (default: submission.csv)')
 args = parser.parse_args()
+
+config_path = args.config
+config = yaml.load(open(config_path, 'r'), Loader=yaml.Loader)
+config['gpus'] = args.gpus
 
 # Device
 dev_id = 'cuda:{}'.format(args.g) \
@@ -31,28 +32,57 @@ dev_id = 'cuda:{}'.format(args.g) \
 device = torch.device(dev_id)
 
 # Load model
-config = torch.load(args.w, map_location=dev_id)
-model = get_instance(config['config']['model']).to(device)
-model.load_state_dict(config['model_state_dict'])
+pretrained_cfg = torch.load(args.weight, map_location=dev_id)
+model = get_instance(pretrained_cfg['config']['model']).to(device)
+model.load_state_dict(pretrained_cfg['model_state_dict'])
+
+# Load metric
+metric = {
+    mcfg['name']: get_instance(mcfg)
+    for mcfg in config['metric']
+}
 
 # Load data
-tfs = tvtf.Compose([
-    tvtf.Resize((224, 224)),
-    tvtf.ToTensor(),
-    tvtf.Normalize(mean=[0.485, 0.456, 0.406],
-                   std=[0.229, 0.224, 0.225]),
-])
-dataset = ImageFolderDataset(args.d, tfs)
-dataloader = DataLoader(dataset, batch_size=args.b)
+val_dataloader = get_single_data(config['dataset'], with_dataset=False)
 
 with torch.no_grad():
-    out = [('filename', 'prediction', 'confidence')]
+    for m in metric.values():
+        m.reset()
+
     model.eval()
-    for i, (imgs, fns) in enumerate(tqdm(dataloader)):
-        imgs = move_to(imgs, device)
-        logits = model(imgs)
-        probs = F.softmax(logits, dim=1)
-        confs, preds = torch.max(probs, dim=1)
-        out.extend([(fn, pred.item(), conf.item())
-                    for fn, pred, conf in zip(fns, preds, confs)])
-    csv.writer(open(args.o, 'w')).writerows(out)
+    print('Evaluating........')
+    progress_bar = tqdm(val_dataloader)
+    for i, (inp, lbl) in enumerate(progress_bar):
+        # Load inputs and labels
+        inp = move_to(inp, device)
+        lbl = move_to(lbl, device)
+
+        # Get network outputs
+        outs = model(inp)
+
+        # Update metric
+        outs = detach(outs)
+        lbl = detach(lbl)
+        for m in metric.values():
+            m.update(outs, lbl)
+
+    print('--- Evaluation result')
+    for k in metric.keys():
+        m = metric[k].value()
+        metric[k].summary()
+
+with torch.no_grad():
+    model.eval()
+    print('Making submission file.......')
+    X = pd.read_csv(config['dataset']['test_path'])
+    X = X.to_numpy().reshape(-1, 1, 28, 28)
+    X = torch.FloatTensor(X)/255
+    X = move_to(X, device)
+    outs = model(X)
+    _, preds = torch.max(outs, dim=1)
+    cols = ['ImageId', 'Label']
+    sub = pd.DataFrame(columns=cols)
+    sub['ImageId'] = np.arange(1, preds.size(0)+1)
+    sub['Label'] = preds.numpy()
+    sub.to_csv(args.save_path, index=False)
+    print('Done.')

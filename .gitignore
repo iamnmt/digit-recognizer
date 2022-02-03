@@ -127,6 +127,6 @@ dmypy.json
 .vscode/
 
 # data
-data/
 runs/
 *.pth
+submission.csv
