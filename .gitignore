@@ -130,4 +130,4 @@ dmypy.json
 runs/
 *.pth
 submission.csv
-data/small.csv
+split.py

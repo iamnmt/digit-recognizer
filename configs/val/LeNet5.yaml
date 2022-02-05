@@ -5,7 +5,6 @@ metric:
     - name: Accuracy
       args:
 dataset:
-    test_path: data/test.csv
     name: MNISTDataset
     args:
         csv_path: lists/val.csv

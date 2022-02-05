@@ -9,7 +9,7 @@ DATA_PATH = './data/train.csv'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_size', default=.2)
+    parser.add_argument('--test_frac', default=.2)
     parser.add_argument('--seed', default=SEED)
 
     args = parser.parse_args()

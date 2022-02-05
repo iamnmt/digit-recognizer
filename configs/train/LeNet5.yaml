@@ -28,7 +28,7 @@ dataset:
         name: MNISTDataset
         args:
             csv_path: lists/train.csv
-            is_rgb: False
+            is_rgb: True
         loader:
             name: DataLoader
             args:
@@ -39,7 +39,7 @@ dataset:
         name: MNISTDataset
         args:
             csv_path: lists/val.csv
-            is_rgb: False
+            is_rgb: True
         loader:
             name: DataLoader
             args:
