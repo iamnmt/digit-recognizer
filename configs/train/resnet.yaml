@@ -1,0 +1,55 @@
+id: LeNet5
+pretrained: null
+seed: 403030
+model:
+    name: BaseModel
+    args:
+        num_classes: 10
+        version: 18
+        from_pretrained: True
+optimizer:
+    name: Adam
+    args:
+        lr: 0.0001
+loss:
+    name: CrossEntropyLoss
+    args:
+metric:
+    - name: Accuracy
+      args:
+scheduler:
+    name: StepLR
+    args:
+        step_size: 3
+        gamma: 0.2
+        last_epoch: -1
+dataset:
+    num_folds: 5
+    folds_train_dir: lists/folds/train/
+    folds_val_dir: lists/folds/val/
+    train:
+        name: MNISTDataset
+        args:
+            csv_path: lists/train.csv
+            is_rgb: True
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 16
+                shuffle: True
+                pin_memory: True
+    val:
+        name: MNISTDataset
+        args:
+            csv_path: lists/val.csv
+            is_rgb: True
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 16
+                pin_memory: True
+trainer:
+    nepochs: 10
+    val_step: 1
+    log_step: 1
+    log_dir: runs
