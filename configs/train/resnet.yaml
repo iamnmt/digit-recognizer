@@ -1,4 +1,4 @@
-id: LeNet5
+id: Resnet
 pretrained: null
 seed: 403030
 model:
