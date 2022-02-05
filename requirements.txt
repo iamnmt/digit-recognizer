@@ -1,0 +1,7 @@
+torchnet
+efficientnet_pytorch
+kaggle
+pyyaml
+torchsummary
+tensorboard
+tqdm
