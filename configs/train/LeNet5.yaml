@@ -21,25 +21,30 @@ scheduler:
         gamma: 0.2
         last_epoch: -1
 dataset:
-    trainval:
-        ratio: .8
+    num_folds: 5
+    folds_train_dir: lists/folds/train/
+    folds_val_dir: lists/folds/val/
+    train:
         name: MNISTDataset
         args:
-            csv_path: data/train.csv
+            csv_path: lists/train.csv
             is_rgb: False
         loader:
-            train:
-                name: DataLoader
-                args:
-                    batch_size: 16
-                    shuffle: True
-                    pin_memory: True
-            val:
-                name: DataLoader
-                args:
-                    batch_size: 16
-                    shuffle: True
-                    pin_memory: True
+            name: DataLoader
+            args:
+                batch_size: 16
+                shuffle: True
+                pin_memory: True
+    val:
+        name: MNISTDataset
+        args:
+            csv_path: lists/val.csv
+            is_rgb: False
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 16
+                pin_memory: True
 trainer:
     nepochs: 10
     val_step: 1

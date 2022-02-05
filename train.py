@@ -1,7 +1,7 @@
+import os
+import yaml
 import pprint
 import argparse
-
-import yaml
 
 from src.utils.random_seed import set_determinism
 from src.utils.getter import get_data
@@ -24,6 +24,33 @@ def train(config):
     trainer.train(train_dataloader=train_dataloader,
                   val_dataloader=val_dataloader)
 
+def train_folds(config):
+    assert config["dataset"]["num_folds"] != 0, "Num folds can not equal with zero"
+
+    num_folds = config["dataset"]["num_folds"]
+    folds_train_dir = config["dataset"]["folds_train_dir"]
+    folds_val_dir = config["dataset"]["folds_val_dir"]
+
+    folds_train_ls = [
+        os.path.join(folds_train_dir, x) for x in os.listdir(folds_train_dir)
+    ]
+    folds_test_ls = [
+        os.path.join(folds_val_dir, x) for x in os.listdir(folds_val_dir)
+    ]
+    folds_train_ls.sort(), folds_test_ls.sort()
+
+    assert len(folds_train_ls) == len(folds_test_ls), "Folds are not match"
+    id = str(config.get("id", "None"))
+
+    for idx, paths in enumerate(
+        zip(folds_train_ls[:num_folds], folds_test_ls[:num_folds])
+    ):
+        config["id"] = id + "/checkpoint_fold{}".format(idx)
+        (
+            config["dataset"]["train"]["args"]["csv_path"],
+            config["dataset"]["val"]["args"]["csv_path"],
+        ) = paths
+        train(config)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -39,4 +66,7 @@ if __name__ == "__main__":
     config['debug'] = args.debug
 
     set_determinism()
-    train(config)
+    if config['dataset']['num_folds'] is not None:
+        train_folds(config)
+    else:
+        train(config)
