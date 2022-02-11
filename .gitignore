@@ -128,6 +128,7 @@ dmypy.json
 
 # data
 runs/
+runs_lightning/
 *.pth
 submission.csv
 split.py
