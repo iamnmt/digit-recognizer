@@ -58,7 +58,7 @@ class Pipeline(pl.LightningModule):
         return {'loss': loss, 'acc': acc}
 
     def validation_epoch_end(self, outputs):
-        loss = acc = torch.tensor([])
+        loss = acc = torch.tensor([], device=self.device)
         for o in outputs:
             loss = torch.cat([loss, o['loss'].unsqueeze(0)], dim=0)
             acc = torch.cat([acc, o['acc']], dim=0)
@@ -102,7 +102,6 @@ def train(config, fast_dev_run=False):
         callbacks=[checkpoint_callback],
         logger=logger,
         default_root_dir = 'runs',
-        limit_train_batches=.1
     )
     trainer.fit(model=pipeline)
 
