@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import pandas as pd
 
 __all__ = ['MNISTDataset']
@@ -6,10 +7,14 @@ __all__ = ['MNISTDataset']
 class MNISTDataset():
     def __init__(self, csv_path, is_rgb=False, is_train=True):
         df = pd.read_csv(csv_path)
-        self.data = df.iloc[:, 1:].values.reshape(-1, 1, 28, 28)
-        self.labels = df.iloc[:, 0].values
         self.is_train = is_train
-
+        if is_train:
+            self.data = df.iloc[:, 1:].values.reshape(-1, 1, 28, 28)
+            self.labels = df.iloc[:, 0].values
+        else:
+            self.data = df.values.reshape(-1, 1, 28, 28)
+            self.labels = np.arange(1, self.data.shape[0]+1)
+            
         if is_rgb:
             self.data = self.data.repeat(3, 1)
 

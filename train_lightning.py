@@ -95,13 +95,14 @@ def train(config, fast_dev_run=False):
     trainer = pl.Trainer(
         fast_dev_run=fast_dev_run,
         tpu_cores=(8 if config['use_tpu'] else None),
-        gpus=config['gpus'],
+        gpus=(1 if config['use_gpu'] else None),
         check_val_every_n_epoch=config['trainer']['val_step'],
         max_epochs=config['trainer']['nepochs'],
         enable_checkpointing=True,
         callbacks=[checkpoint_callback],
         logger=logger,
         default_root_dir = 'runs',
+        limit_train_batches=.01
     )
     trainer.fit(model=pipeline)
 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     parser.add_argument('--config')
     parser.add_argument('--seed', type=int, default=SEED)
     parser.add_argument("--use_tpu", action="store_true", default=False)
-    parser.add_argument('--gpus', type=int, default=None)
+    parser.add_argument('--use_gpu', action="store_true", default=False)
     parser.add_argument("--save_dir", default="runs_lightning")
     parser.add_argument("--verbose", action="store_true", default=False)
 
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     config_path = args.config
     config = yaml.load(open(config_path, 'r'), Loader=yaml.Loader)
     config["use_tpu"] = args.use_tpu
-    config['gpus'] = args.gpus
+    config['use_gpu'] = args.use_gpu
     config["save_dir"] = args.save_dir
     config["verbose"] = args.verbose
 
