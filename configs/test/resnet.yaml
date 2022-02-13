@@ -1,0 +1,18 @@
+model:
+    name: BaseModel
+    args:
+        num_classes: 10
+        version: 18
+        from_pretrained: True
+dataset:
+    name: MNISTDataset
+    args:
+        csv_path: data/test.csv
+        is_rgb: True
+        is_train: False
+    loader:
+        name: DataLoader
+        args:
+            batch_size: 64
+            shuffle: False
+            pin_memory: True
